@@ -1,5 +1,9 @@
 import numpy, sys 
 
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+
 # activation functions and their derivatives
 def logistic(x) : return 1 / (1 + numpy.exp(-x))
 def logistic_deriv(x) : return logistic(x) * (1 - logistic(x))
@@ -129,37 +133,32 @@ class FullyConnectedLayer:
             self.neurons[i].print_neuron()
             print("")
 
+class ConvolutionalLayer:
+    def __init__(self, num_kernels, kernel_size, activation, input_dimension, eta, weights):
+        self.num_kernels = num_kernels
+        self.kernel_size = kernel_size
+        self.activation = activation
+        self.input_dimension = input_dimension
+        self.eta = eta
+        self.weights = weights
+        self.output_dimension = [input_dimension[0] - kernel_size, input_dimension[1] - kernel_size]
+        print("size of output: " + str(self.output_dimension))
+
 class NeuralNetwork:
-    def __init__(self, num_layers, num_neurons, activation, 
-                       num_inputs, loss, eta, weights):
-        self.num_layers = num_layers
-        self.num_neurons = num_neurons
-        self.num_inputs = num_inputs
+    def __init__(self, input_size, loss, eta):
         self.loss = loss
         self.eta = eta
-
-        self.activation = []
-        for i in range(num_layers):
-            self.activation.append(activation)
-
         self.layers = []
-        prev_inputs = self.num_inputs
-        if weights == "random":
-            for i in range(self.num_layers):
-                self.layers.append(FullyConnectedLayer(self.num_neurons[i],
-                                                       self.activation[i],
-                                                       prev_inputs,
-                                                       self.eta,
-                                                       "random"))
-                prev_inputs = self.num_neurons[i]
-        else:
-            for i in range(self.num_layers):
-                self.layers.append(FullyConnectedLayer(self.num_neurons[i],
-                                                       self.activation[i],
-                                                       prev_inputs,
-                                                       self.eta,
-                                                       weights[i]))
-                prev_inputs = self.num_neurons[i]
+        #self.addLayer(self, layer, lambda x: x, 1, eta, weights)
+
+    def addLayer(self, layer, **kwargs):
+        print("adding new layer of type:")
+        print(layer)
+        newLayer = layer(**kwargs)
+
+        #if not len(self.layers):
+            #self.layers.append(FullyConnectedLayer(  
+
 
     def calculate(self, data):
         output = data
@@ -188,14 +187,44 @@ class NeuralNetwork:
             self.layers[i].print_layer()
 
 def main():
-    choices = ['example', 'and', 'xor']
+    choices = ['example1', 'example2', 'example3']
     if len(sys.argv) != 2 or sys.argv[1] not in choices:
         print("Please provide one of the following command line arguments:")
-        print("'example', 'and', or 'xor'")
+        print(choices)
         exit()
 
-    if sys.argv[1] == 'example':
-        print("Running example from class.")
+    if sys.argv[1] == 'example1':
+        print("Running example1.")
+
+        print("Keras output")
+        model=Sequential()
+        model.add(layers.Conv2D(filters=1,kernel_size=3,strides=1,padding='valid',input_shape=(5,5,1)))
+        sample = numpy.array([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1], [0,0,1,1,0], [0,1,1,0,0]])
+        weight = numpy.asarray([[[[[1]],[[0]],[[1]]],[[[0]],[[1]],[[0]]],[[[1]],[[0]],[[1]]]],[0]], dtype=object)
+        weight[0] = numpy.array(weight[0])
+        weight[1] = numpy.array(weight[1])
+        model.layers[0].set_weights(weight) 
+        print(model.summary())
+        print()
+
+        print("input: " + str(sample))
+        print()
+        sample = numpy.reshape(sample, (1,5,5,1))
+        print("prediction:")
+        print(model.predict(sample))
+        print()
+        
+        print("My cnn")
+        input_size = 5
+        loss = square_error
+        eta = .2
+        cnn = NeuralNetwork(input_size, loss, eta)
+
+        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights="random")
+    #def __init__(self, num_kernels, kernel_size, activation, input_dimension, eta, weights):
+
+        exit()
+
         num_inputs = 2
         num_layers = 2
         num_neurons = [2,2]
