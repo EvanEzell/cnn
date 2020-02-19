@@ -192,6 +192,15 @@ class ConvolutionalLayer:
             k_out.append(r_out)
     
         print(k_out)
+        return k_out
+
+class FlattenLayer:
+    def __init__(self, input_size):
+        self.input_size = input_size
+
+    def calculate(self, data):
+        print(data)
+        return numpy.asarray(data).flatten().tolist()
 
 class NeuralNetwork:
     def __init__(self, input_size, loss, eta):
@@ -272,7 +281,10 @@ def main():
         weights = [[1,0,1,0,1,0,1,0,1]]
 
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights=weights)
-        cnn.layers[0].calculate([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,0],[0,1,1,0,0]])
+        result = cnn.layers[0].calculate([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,0],[0,1,1,0,0]])
+        cnn.addLayer(FlattenLayer, input_size=[1,5,5])
+        result = cnn.layers[1].calculate(result)
+        print(result)
 
         exit()
 
