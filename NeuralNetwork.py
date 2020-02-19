@@ -85,7 +85,7 @@ class Neuron:
 
         return weight_deltas
 
-    def print_neuron(self):
+    def print(self):
         print("num_inputs: " + str(self.num_inputs))
         print("eta: " + str(self.eta))
         count = 0
@@ -127,10 +127,10 @@ class FullyConnectedLayer:
                                    self.neurons[i].train(derivs[i]))
         return(delta_sums)
 
-    def print_layer(self):
+    def print(self):
         for i in range(self.num_neurons):
             print("neuron " + str(i))
-            self.neurons[i].print_neuron()
+            self.neurons[i].print()
             print("")
 
 class ConvolutionalLayer:
@@ -141,8 +141,30 @@ class ConvolutionalLayer:
         self.input_dimension = input_dimension
         self.eta = eta
         self.weights = weights
-        self.output_dimension = [input_dimension[0] - kernel_size, input_dimension[1] - kernel_size]
+        self.output_dimension = [input_dimension[0] - kernel_size + 1, input_dimension[1] - kernel_size + 1]
         print("size of output: " + str(self.output_dimension))
+        self.kernels = []
+        for k in range(num_kernels):
+            rows = []
+            for i in range(self.output_dimension[0]):
+                column = []
+                for j in range(self.output_dimension[1]):
+                    column.append(Neuron(self.activation,
+                                         numpy.prod(self.output_dimension),
+                                         self.eta,
+                                         self.weights[k]))
+                rows.append(column)
+            self.kernels.append(rows)
+
+        print("kernels: ")
+        for k in range(num_kernels):
+            print("kernel #: " + str(k))
+            for i in range(self.output_dimension[0]):
+                print("row " + str(i))
+                for j in range(self.output_dimension[1]):
+                    print("col " + str(j))
+                    self.kernels[k][i][j].print()
+            
 
 class NeuralNetwork:
     def __init__(self, input_size, loss, eta):
@@ -179,12 +201,12 @@ class NeuralNetwork:
         for i in range(self.num_layers-1,-1,-1):
             derivs = self.layers[i].train(derivs)
 
-    def print_nn(self):
+    def print(self):
         for i in range(self.num_layers):
             print("Layer " + str(i))
             print("Number of Neurons in Layer: " + 
                   str(self.layers[i].num_neurons))
-            self.layers[i].print_layer()
+            self.layers[i].print()
 
 def main():
     choices = ['example1', 'example2', 'example3']
@@ -219,8 +241,9 @@ def main():
         loss = square_error
         eta = .2
         cnn = NeuralNetwork(input_size, loss, eta)
+        weights = [[1,0,1,0,1,0,1,0,1]]
 
-        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights="random")
+        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights=weights)
     #def __init__(self, num_kernels, kernel_size, activation, input_dimension, eta, weights):
 
         exit()
