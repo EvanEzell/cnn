@@ -4,6 +4,8 @@ from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 
+debug = False
+
 # activation functions and their derivatives
 def logistic(x) : return 1 / (1 + numpy.exp(-x))
 def logistic_deriv(x) : return logistic(x) * (1 - logistic(x))
@@ -156,15 +158,40 @@ class ConvolutionalLayer:
                 rows.append(column)
             self.kernels.append(rows)
 
-        print("kernels: ")
-        for k in range(num_kernels):
-            print("kernel #: " + str(k))
-            for i in range(self.output_dimension[0]):
-                print("row " + str(i))
-                for j in range(self.output_dimension[1]):
-                    print("col " + str(j))
-                    self.kernels[k][i][j].print()
-            
+        if debug:
+            print("kernels: ")
+            for k in range(num_kernels):
+                print("kernel #: " + str(k))
+                for i in range(self.output_dimension[0]):
+                    print("row " + str(i))
+                    for j in range(self.output_dimension[1]):
+                        print("col " + str(j))
+                        self.kernels[k][i][j].print()
+
+    def calculate(self, data):
+        print("calculating...")
+        print("data: " + str(data))
+        k_out = []
+        for k in range(self.num_kernels):
+            r_out = []
+            for r_idx in range(self.output_dimension[0]):
+                c_out = []
+                for c_idx in range(self.output_dimension[1]):
+                    total = 0
+                    for i in range(self.output_dimension[0]):
+                        for j in range(self.output_dimension[1]):
+                            if debug:
+                                print("c_idx: " + str(c_idx))
+                                print("r_idx: " + str(r_idx))
+                                print("i: " + str(i))
+                                print("j: " + str(j))
+                            total += data[r_idx+i][c_idx+j] * self.kernels[k][i][j].weights[self.output_dimension[1]*i+j]
+                    c_out.append(total)
+                r_out.append(c_out)
+                print()
+            k_out.append(r_out)
+    
+        print(k_out)
 
 class NeuralNetwork:
     def __init__(self, input_size, loss, eta):
@@ -177,6 +204,7 @@ class NeuralNetwork:
         print("adding new layer of type:")
         print(layer)
         newLayer = layer(**kwargs)
+        self.layers.append(newLayer)
 
         #if not len(self.layers):
             #self.layers.append(FullyConnectedLayer(  
@@ -244,7 +272,7 @@ def main():
         weights = [[1,0,1,0,1,0,1,0,1]]
 
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights=weights)
-    #def __init__(self, num_kernels, kernel_size, activation, input_dimension, eta, weights):
+        cnn.layers[0].calculate([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,0],[0,1,1,0,0]])
 
         exit()
 
