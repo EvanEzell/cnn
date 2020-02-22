@@ -202,6 +202,36 @@ class FlattenLayer:
         print(data)
         return numpy.asarray(data).flatten().tolist()
 
+class MaxPoolingLayer:
+    def __init__(self, kernel_size, input_dimension):
+        self.kernel_size = kernel_size
+        self.input_dimension = input_dimension
+
+    def calculate(self, data):
+        k_out = []
+        for k in range(self.input_dimension[0]):
+            r_out = []
+            for r_idx in range(0,self.input_dimension[1],self.kernel_size):
+                c_out = []
+                for c_idx in range(0,self.input_dimension[2],self.kernel_size):
+                    pool = []
+                    for i in range(self.kernel_size):
+                        for j in range(self.kernel_size):
+                            if debug:
+                                print("k: " + str(k))
+                                print("c_idx: " + str(c_idx))
+                                print("r_idx: " + str(r_idx))
+                                print("i: " + str(i))
+                                print("j: " + str(j))
+                                print(data[k][r_idx+i][c_idx+j])
+                            pool.append(data[k][r_idx+i][c_idx+j])
+                    c_out.append(max(pool))
+                r_out.append(c_out)
+            k_out.append(r_out)
+        
+        print(k_out)
+        return k_out
+
 class NeuralNetwork:
     def __init__(self, input_size, loss, eta):
         self.loss = loss
@@ -255,23 +285,80 @@ def main():
     if sys.argv[1] == 'example1':
         print("Running example1.")
 
-        print("Keras output")
         model=Sequential()
-        model.add(layers.Conv2D(filters=1,kernel_size=3,strides=1,padding='valid',input_shape=(5,5,1)))
-        sample = numpy.array([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1], [0,0,1,1,0], [0,1,1,0,0]])
-        weight = numpy.asarray([[[[[1]],[[0]],[[1]]],[[[0]],[[1]],[[0]]],[[[1]],[[0]],[[1]]]],[0]], dtype=object)
-        weight[0] = numpy.array(weight[0])
-        weight[1] = numpy.array(weight[1])
+
+        # add convolutional layer
+        model.add(layers.Conv2D(filters=1,
+                                kernel_size=3,
+                                strides=1,
+                                padding='valid',
+                                input_shape=(5,5,1)))
+
+        weight = [numpy.asarray([[[[1]],[[0]],[[1]]],
+                                 [[[0]],[[1]],[[0]]],
+                                 [[[1]],[[0]],[[1]]]]),
+                  numpy.asarray([0])]
+
         model.layers[0].set_weights(weight) 
-        print(model.summary())
+        
+        # add a flatten layer
+        model.add(layers.Flatten())
+
+        # add fully connected layer
+        model.add(layers.Dense(1, activation='sigmoid'))
+
+        weight = [numpy.asarray([[-0.1],
+                                 [ 0.2],
+                                 [-0.3],
+                                 [ 0.4],
+                                 [-0.5],
+                                 [ 0.6],
+                                 [-0.7],
+                                 [ 0.8],
+                                 [-0.9]]),
+                  numpy.array([0])]
+
+        model.layers[2].set_weights(weight)
+
+        print('Keras Kernel Weights:')
+        print(model.layers[0].get_weights(), end='\n\n')
+
+        print('Keras Fully Connected Weights:')
+        print(model.layers[2].get_weights(), end='\n\n')
+
+        # prepare model for training
+        sgd = keras.optimizers.SGD(learning_rate=0.1,
+                                   momentum=0.0,
+                                   nesterov=False)
+        model.compile(loss='mean_squared_error', optimizer=sgd)
+
+        image = numpy.asarray([[[[1],[1],[1],[0],[0]],
+                                [[0],[1],[1],[1],[0]],
+                                [[0],[0],[1],[1],[1]],
+                                [[0],[0],[1],[1],[0]],
+                                [[0],[1],[1],[0],[0]]]])
+
+        print('Input Image:')
+        print(image, end='\n\n')
+
+        print('Keras Model Output')
+        print(model.predict(image), end='\n\n')
+
+        print('Keras Model Evaluation')
+        model.evaluate(image,numpy.asarray([[1]]))
         print()
 
-        print("input: " + str(sample))
-        print()
-        sample = numpy.reshape(sample, (1,5,5,1))
-        print("prediction:")
-        print(model.predict(sample))
-        print()
+#        model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
+#
+#        print('Keras Updated Kernel Weights:')
+#        print(model.layers[0].get_weights(), end='\n\n')
+#
+#        print('Keras Updated Fully Connected Weights:')
+#        print(model.layers[2].get_weights(), end='\n\n')
+#
+#        print('Keras Updated Model Evaluation')
+#        model.evaluate(image,numpy.asarray([[1]]))
+
         
         print("My cnn")
         input_size = 5
@@ -282,9 +369,12 @@ def main():
 
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights=weights)
         result = cnn.layers[0].calculate([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,0],[0,1,1,0,0]])
-        cnn.addLayer(FlattenLayer, input_size=[1,5,5])
-        result = cnn.layers[1].calculate(result)
-        print(result)
+        #cnn.addLayer(FlattenLayer, input_size=[1,3,3])
+        #result = cnn.layers[1].calculate(result)
+        #print(result)
+        cnn.addLayer(MaxPoolingLayer, kernel_size=2,input_dimension=[1,4,4])
+        result = [[[12,20,30,0],[8,12,2,0],[34,70,37,4],[112,100,25,12]]]
+        cnn.layers[1].calculate(result)
 
         exit()
 
