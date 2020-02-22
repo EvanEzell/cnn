@@ -169,8 +169,6 @@ class ConvolutionalLayer:
                         self.kernels[k][i][j].print()
 
     def calculate(self, data):
-        print("calculating...")
-        print("data: " + str(data))
         k_out = []
         for k in range(self.num_kernels):
             r_out = []
@@ -188,10 +186,10 @@ class ConvolutionalLayer:
                             total += data[r_idx+i][c_idx+j] * self.kernels[k][i][j].weights[self.output_dimension[1]*i+j]
                     c_out.append(total)
                 r_out.append(c_out)
-                print()
+                if debug: print()
             k_out.append(r_out)
     
-        print(k_out)
+        #print(k_out)
         return k_out
 
 class FlattenLayer:
@@ -199,7 +197,7 @@ class FlattenLayer:
         self.input_size = input_size
 
     def calculate(self, data):
-        print(data)
+        #print(data)
         return numpy.asarray(data).flatten().tolist()
 
 class MaxPoolingLayer:
@@ -229,7 +227,7 @@ class MaxPoolingLayer:
                 r_out.append(c_out)
             k_out.append(r_out)
         
-        print(k_out)
+        #print(k_out)
         return k_out
 
 class NeuralNetwork:
@@ -237,11 +235,11 @@ class NeuralNetwork:
         self.loss = loss
         self.eta = eta
         self.layers = []
-        #self.addLayer(self, layer, lambda x: x, 1, eta, weights)
 
     def addLayer(self, layer, **kwargs):
-        print("adding new layer of type:")
-        print(layer)
+        if debug:
+            print("adding new layer of type:")
+            print(layer)
         newLayer = layer(**kwargs)
         self.layers.append(newLayer)
 
@@ -252,7 +250,10 @@ class NeuralNetwork:
     def calculate(self, data):
         output = data
         for layer in self.layers:
+            print("calculating output for layer: ", end='')
+            print(layer)
             output = layer.calculate(output)
+            print("output: " + str(output), end='\n\n')
         return output
 
     def calculate_loss(self, sample, target):
@@ -361,20 +362,47 @@ def main():
 
         
         print("My cnn")
-        input_size = 5
-        loss = square_error
-        eta = .2
-        cnn = NeuralNetwork(input_size, loss, eta)
+        cnn = NeuralNetwork(input_size = 5,
+                            loss = square_error,
+                            eta = .1)
+
         weights = [[1,0,1,0,1,0,1,0,1]]
 
-        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3, activation=logistic, input_dimension=(5,5), eta=.2, weights=weights)
-        result = cnn.layers[0].calculate([[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,1,1,0],[0,1,1,0,0]])
-        #cnn.addLayer(FlattenLayer, input_size=[1,3,3])
+        # add convolutional layer
+        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
+                     activation=logistic, input_dimension=(5,5), eta=.1,
+                     weights=weights)
+
+        # add flatten layer
+        cnn.addLayer(FlattenLayer, input_size=[1,3,3])
+
+        # add fully connected layer
+        weights = [[-0.1,0.2,-0.3,0.4,-0.5,0.6,-0.7,0.8,-0.9,0.0]]
+
+        cnn.addLayer(FullyConnectedLayer, 
+                     num_neurons = 1,
+                     activation = logistic,
+                     num_inputs = 9,
+                     eta = .1,
+                     weights = weights)
+
+        image = [[1,1,1,0,0],
+                 [0,1,1,1,0],
+                 [0,0,1,1,1],
+                 [0,0,1,1,0],
+                 [0,1,1,0,0]]
+
+        print("My Model Output")
+        print(cnn.calculate(image))
+
+        print("My Model Evaluation")
+        print(cnn.calculate_loss(image,[1]))
+
         #result = cnn.layers[1].calculate(result)
         #print(result)
-        cnn.addLayer(MaxPoolingLayer, kernel_size=2,input_dimension=[1,4,4])
-        result = [[[12,20,30,0],[8,12,2,0],[34,70,37,4],[112,100,25,12]]]
-        cnn.layers[1].calculate(result)
+        #cnn.addLayer(MaxPoolingLayer, kernel_size=2,input_dimension=[1,4,4])
+        #result = [[[12,20,30,0],[8,12,2,0],[34,70,37,4],[112,100,25,12]]]
+        #cnn.layers[1].calculate(result)
 
         exit()
 
