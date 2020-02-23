@@ -443,7 +443,138 @@ def main():
 
     elif sys.argv[1] == 'example2':
         print("Running example2.")
+
+        print("Keras Convolutional Neural Network")
+        print("==================================")
+        model=Sequential()
+
+        # add 1st convolutional layer
+        model.add(layers.Conv2D(filters=1,
+                                kernel_size=3,
+                                strides=1,
+                                padding='valid',
+                                activation='sigmoid',
+                                input_shape=(5,5,1)))
+
+        weight = [numpy.asarray([[[[1]],[[0]],[[1]]],
+                                 [[[0]],[[1]],[[0]]],
+                                 [[[1]],[[0]],[[1]]]]),
+                  numpy.asarray([0])]
+
+        model.layers[0].set_weights(weight) 
+
+        # add 2nd convolutional layer
+        model.add(layers.Conv2D(filters=1,
+                                kernel_size=3,
+                                strides=1,
+                                padding='valid',
+                                activation='sigmoid',
+                                input_shape=(3,3,1)))
+
+        weight = [numpy.asarray([[[[0]],[[1]],[[0]]],
+                                 [[[0]],[[1]],[[0]]],
+                                 [[[0]],[[1]],[[0]]]]),
+                  numpy.asarray([0])]
+
+        model.layers[1].set_weights(weight) 
+
+        # add a flatten layer
+        model.add(layers.Flatten())
+
+        # add fully connected layer
+        model.add(layers.Dense(1, activation='sigmoid'))
+
+        weight = [numpy.asarray([[0.5]]),numpy.array([0])]
+
+        model.layers[3].set_weights(weight)
+
+        image = numpy.asarray([[[[1],[1],[1],[0],[0]],
+                                [[0],[1],[1],[1],[0]],
+                                [[0],[0],[1],[1],[1]],
+                                [[0],[0],[1],[1],[0]],
+                                [[0],[1],[1],[0],[0]]]])
+
+        # prepare model for training
+        sgd = keras.optimizers.SGD(learning_rate=0.1,
+                                   momentum=0.0,
+                                   nesterov=False)
+        model.compile(loss='mean_squared_error', optimizer=sgd)
+
+        print('Keras Model Output')
+        print(model.predict(image), end='\n\n')
+
+        print('Keras Model Loss - MSE')
+        model.evaluate(image,numpy.asarray([[1]]))
+        print()
+
+        model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
+
+        print('Keras Updated 1st Layer Kernel Weights:')
+        print(model.layers[0].get_weights(), end='\n\n')
+
+        print('Keras Updated 2nd Layer Kernel Weights:')
+        print(model.layers[1].get_weights(), end='\n\n')
+
+        print('Keras Updated Fully Connected Weights:')
+        print(model.layers[3].get_weights(), end='\n\n')
+
+        print('Keras Updated Loss - MSE')
+        model.evaluate(image,numpy.asarray([[1]]))
+        print()
+
+        print("My Convolutional Neural Network")
+        print("===============================")
+        cnn = NeuralNetwork(input_size = 5,
+                            loss = square_error,
+                            eta = .1)
+
+        weights = [[1,0,1,0,1,0,1,0,1,0]]
+
+        #print("My Kernel Weights")
+        #print(weights, end='\n\n')
+
+        # add 1st convolutional layer
+        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
+                     activation=logistic, input_dimension=(5,5), eta=.1,
+                     weights=weights)
+
+        # add 2nd convolutional layer
+        weights = [[0,1,0,0,1,0,0,1,0,0]]
+
+        cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
+                     activation=logistic, input_dimension=(3,3), eta=.1,
+                     weights=weights)
+
+        # add flatten layer
+        cnn.addLayer(FlattenLayer, input_size=[1,1,1])
+
+        # add fully connected layer
+        weights = [[0.5,0.0]]
         
+        cnn.addLayer(FullyConnectedLayer, 
+                     num_neurons = 1,
+                     activation = logistic,
+                     num_inputs = 1,
+                     eta = .1,
+                     weights = weights)
+
+        image = [[1,1,1,0,0],
+                 [0,1,1,1,0],
+                 [0,0,1,1,1],
+                 [0,0,1,1,0],
+                 [0,1,1,0,0]]
+
+        """
+        print("Input Image")
+        print(image, end='\n\n')
+
+        print("My Model Output")
+        print(cnn.calculate(image), end='\n\n')
+
+        print("My Model Loss - MSE")
+        print(cnn.calculate_loss(image,[1]), end='\n\n')
+        """
+
     else:
         print("Running example3.")
 
