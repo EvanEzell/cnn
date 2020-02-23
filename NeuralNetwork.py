@@ -188,30 +188,25 @@ class ConvolutionalLayer:
         return k_out
 
     def train(self, deriv):
-
-        print("derivs in conv train: " + str(deriv))
-
-        exit()
-
         total = 0
         kernel_weight_deltas = []
         for k in range(self.num_kernels):
             weight_deltas = []
-            for m in range(self.kernel_size):
-                for n in range(self.kernel_size):
-                    for i in range(self.output_dimension[0]):
-                        for j in range(self.output_dimension[1]):
-                            total += deriv[k][i][j] * self.data[i][j]
-                    weight_deltas.append(total)
+            for i in range(self.kernel_size):
+                for j in range(self.kernel_size):
+                    #derivs = numpy.asarray(deriv[k]).flatten().tolist()
+                    weight_deltas.append(self.kernels[k][i][j].train(deriv[k][i][j]))
             kernel_weight_deltas.append(weight_deltas)
 
-        # update weights
-        for k in range(self.num_kernels):
-            weights = self.kernels[k][0][0].weights
-            for i in len(weights):
-                weights[i] -= self.eta * kernel_weight_deltas
-
+        #print("kernel weight deltas")
+        #print(kernel_weight_deltas)
         return kernel_weight_deltas
+                
+    def print(self):
+        for k in range(self.num_kernels):
+            for i in range(self.kernel_size):
+                for j in range(self.kernel_size):
+                    self.kernels[k][i][j].print()
 
 class FlattenLayer:
     def __init__(self, input_size):
@@ -350,11 +345,12 @@ def main():
 
         model.layers[2].set_weights(weight)
 
+        old_conv_weights = model.layers[0].get_weights()
         print('Keras Kernel Weights:')
         print(model.layers[0].get_weights(), end='\n\n')
 
-        print('Keras Fully Connected Weights:')
-        print(model.layers[2].get_weights(), end='\n\n')
+        #print('Keras Fully Connected Weights:')
+        #print(model.layers[2].get_weights(), end='\n\n')
 
         # prepare model for training
         sgd = keras.optimizers.SGD(learning_rate=0.1,
@@ -368,27 +364,34 @@ def main():
                                 [[0],[0],[1],[1],[0]],
                                 [[0],[1],[1],[0],[0]]]])
 
-        print('Input Image:')
+        """print('Input Image:')
         print(image, end='\n\n')
 
         print('Keras Model Output')
         print(model.predict(image), end='\n\n')
 
-#        print('Keras Model Evaluation')
-#        model.evaluate(image,numpy.asarray([[1]]))
-#        print()
-#
-#        model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
-#
-#        print('Keras Updated Kernel Weights:')
-#        print(model.layers[0].get_weights(), end='\n\n')
-#
-#        print('Keras Updated Fully Connected Weights:')
-#        print(model.layers[2].get_weights(), end='\n\n')
-#
-#        print('Keras Updated Model Evaluation')
-#        model.evaluate(image,numpy.asarray([[1]]))
-        
+        print('Keras Model Evaluation')
+        model.evaluate(image,numpy.asarray([[1]]))
+        print()
+        """
+
+        model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
+
+        print('Keras Updated Kernel Weights:')
+        print(model.layers[0].get_weights(), end='\n\n')
+
+        old_conv_weights = model.layers[0].get_weights()
+
+        print("Keras difference in weights")
+        print(numpy.subtract(old_conv_weights,model.layers[0].get_weights()))
+
+        """
+        print('Keras Updated Fully Connected Weights:')
+        print(model.layers[2].get_weights(), end='\n\n')
+
+        print('Keras Updated Model Evaluation')
+        model.evaluate(image,numpy.asarray([[1]]))
+       """ 
         print("My cnn")
         cnn = NeuralNetwork(input_size = 5,
                             loss = square_error,
@@ -400,6 +403,7 @@ def main():
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
                      activation=logistic, input_dimension=(5,5), eta=.1,
                      weights=weights)
+
 
         # add flatten layer
         cnn.addLayer(FlattenLayer, input_size=[1,3,3])
@@ -420,17 +424,18 @@ def main():
                  [0,0,1,1,0],
                  [0,1,1,0,0]]
 
-        print("My Model Output")
+        """print("My Model Output")
         print(cnn.calculate(image))
-        exit()
 
         print("My Model Evaluation")
         print(cnn.calculate_loss(image,[1]))
+"""
+        print("My old conv weights")
+        print(cnn.layers[0].print())
 
         cnn.train(image,[1])
 
-        print('Keras Updated Fully Connected Weights:')
-        print(model.layers[2].get_weights(), end='\n\n')
+        exit()
 
         #result = cnn.layers[1].calculate(result)
         #print(result)
