@@ -170,36 +170,6 @@ class ConvolutionalLayer:
                         self.kernels[k][i][j].print()
 
     def calculate(self, data):
-#        self.prev = data
-#        k_out = []
-#        k_out_act = []
-#        for k in range(self.num_kernels):
-#            r_out = []
-#            r_out_act = []
-#            for r_idx in range(self.output_dimension[0]):
-#                c_out = []
-#                c_out_act = []
-#                for c_idx in range(self.output_dimension[1]):
-#                    total = 0
-#                    for i in range(self.output_dimension[0]):
-#                        for j in range(self.output_dimension[1]):
-#                            if debug:
-#                                print("c_idx: " + str(c_idx))
-#                                print("r_idx: " + str(r_idx))
-#                                print("i: " + str(i))
-#                                print("j: " + str(j))
-#                            total += data[r_idx+i][c_idx+j] * self.kernels[k][i][j].weights[self.output_dimension[1]*i+j]
-#                    c_out.append(total+self.bias[k])
-#                    c_out_act.append(self.activation(total+self.bias[k]))
-#                r_out.append(c_out)
-#                r_out_act.append(c_out_act)
-#                if debug: print()
-#            k_out.append(r_out)
-#            k_out_act.append(r_out_act)
-#
-#        self.net = k_out
-#        self.out = k_out_act
-
         data = numpy.asarray(data)
         k_out = []
         for k in range(self.num_kernels):
@@ -207,7 +177,10 @@ class ConvolutionalLayer:
             for i in range(self.output_dimension[0]):
                 c_out = []
                 for j in range(self.output_dimension[1]):
-                    result = self.kernels[k][i][j].calculate(data[i:i+self.kernel_size,j:j+self.kernel_size].flatten().tolist())
+                    result = self.kernels[k][i][j].calculate(
+                                data[i:i+self.kernel_size,
+                                     j:j+self.kernel_size]
+                                     .flatten().tolist())
                     c_out.append(result)
                 r_out.append(c_out)
             k_out.append(r_out)
