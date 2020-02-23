@@ -187,12 +187,16 @@ class ConvolutionalLayer:
         return k_out
 
     def train(self, deriv):
+        print("deriv")
+        print(deriv)
         total = 0
         kernel_weight_deltas = []
         for k in range(self.num_kernels):
             weight_deltas = []
-            for i in range(self.kernel_size):
-                for j in range(self.kernel_size):
+            #for i in range(self.kernel_size):
+                #for j in range(self.kernel_size):
+            for i in range(self.output_dimension[0]):
+                for j in range(self.output_dimension[1]):
                     #derivs = numpy.asarray(deriv[k]).flatten().tolist()
                     weight_deltas.append(self.kernels[k][i][j].train(deriv[k][i][j]))
             kernel_weight_deltas.append(weight_deltas)
@@ -442,6 +446,9 @@ def main():
 
         print("My Updated Fully Connected Weights")
         cnn.layers[2].print()
+
+        print("My Model Updated Loss - MSE")
+        print(cnn.calculate_loss(image,[1]), end='\n\n')
 
     elif sys.argv[1] == 'example2':
         print("Running example2.")
