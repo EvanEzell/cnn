@@ -259,8 +259,7 @@ class NeuralNetwork:
         if debug:
             print("adding new layer of type:")
             print(layer)
-        newLayer = layer(**kwargs)
-        self.layers.append(newLayer)
+        self.layers.append(layer(**kwargs))
 
         #if not len(self.layers):
             #self.layers.append(FullyConnectedLayer(  
@@ -286,8 +285,11 @@ class NeuralNetwork:
             derivs.append(get_deriv(self.loss)(prediction[i],target[i]))
 
         for i in range(len(self.layers)-1,-1,-1):
+            print("training layer " + str(i))
+            print(self.layers[i])
             derivs = self.layers[i].train(derivs)
-            #self.layers[i].print()
+            self.layers[i].print()
+            print()
 
     def print(self):
         for i in range(self.num_layers):
@@ -574,6 +576,22 @@ def main():
         print("My Model Loss - MSE")
         print(cnn.calculate_loss(image,[1]), end='\n\n')
         """
+
+        print("Training...")
+        cnn.train(image,[1])
+
+        print("hello")
+
+        print('My Updated 1st Layer Kernel Weights:')
+        cnn.layers[0].print()
+        print()
+
+        print('My Updated 2nd Layer Kernel Weights:')
+        cnn.layers[1].print()
+        print()
+
+        print("My Updated Fully Connected Weights")
+        cnn.layers[3].print()
 
     else:
         print("Running example3.")
