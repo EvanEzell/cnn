@@ -27,7 +27,7 @@ def log_loss(prediction, target):
             total += -log(1 - prediction)
     return total
 def square_error_deriv(prediction, target):
-    return prediction - target
+    return 2 * (prediction - target)
 def log_loss_deriv(prediction, target):
     return - (target/prediction) + ((1-target)/(1-prediction))
 
@@ -143,7 +143,8 @@ class ConvolutionalLayer:
         self.input_dimension = input_dimension
         self.eta = eta
         self.weights = weights
-        self.output_dimension = [input_dimension[0] - kernel_size + 1, input_dimension[1] - kernel_size + 1]
+        self.output_dimension = [input_dimension[0] - kernel_size + 1,
+                                 input_dimension[1] - kernel_size + 1]
         print("size of output: " + str(self.output_dimension))
         self.kernels = []
         for k in range(num_kernels):
@@ -169,36 +170,89 @@ class ConvolutionalLayer:
                         self.kernels[k][i][j].print()
 
     def calculate(self, data):
+#        self.prev = data
+#        k_out = []
+#        k_out_act = []
+#        for k in range(self.num_kernels):
+#            r_out = []
+#            r_out_act = []
+#            for r_idx in range(self.output_dimension[0]):
+#                c_out = []
+#                c_out_act = []
+#                for c_idx in range(self.output_dimension[1]):
+#                    total = 0
+#                    for i in range(self.output_dimension[0]):
+#                        for j in range(self.output_dimension[1]):
+#                            if debug:
+#                                print("c_idx: " + str(c_idx))
+#                                print("r_idx: " + str(r_idx))
+#                                print("i: " + str(i))
+#                                print("j: " + str(j))
+#                            total += data[r_idx+i][c_idx+j] * self.kernels[k][i][j].weights[self.output_dimension[1]*i+j]
+#                    c_out.append(total+self.bias[k])
+#                    c_out_act.append(self.activation(total+self.bias[k]))
+#                r_out.append(c_out)
+#                r_out_act.append(c_out_act)
+#                if debug: print()
+#            k_out.append(r_out)
+#            k_out_act.append(r_out_act)
+#
+#        self.net = k_out
+#        self.out = k_out_act
+
+        data = numpy.asarray(data)
         k_out = []
         for k in range(self.num_kernels):
             r_out = []
-            for r_idx in range(self.output_dimension[0]):
+            for i in range(self.output_dimension[0]):
                 c_out = []
-                for c_idx in range(self.output_dimension[1]):
-                    total = 0
+                for j in range(self.output_dimension[1]):
+                    result = self.kernels[k][i][j].calculate(data[i:i+self.kernel_size,j:j+self.kernel_size].flatten().tolist())
+                    c_out.append(result)
+                r_out.append(c_out)
+            k_out.append(r_out)
+
+        return k_out
+
+    def train(self, deriv):
+
+        print("derivs in conv train: " + str(deriv))
+
+        exit()
+
+        total = 0
+        kernel_weight_deltas = []
+        for k in range(self.num_kernels):
+            weight_deltas = []
+            for m in range(self.kernel_size):
+                for n in range(self.kernel_size):
                     for i in range(self.output_dimension[0]):
                         for j in range(self.output_dimension[1]):
-                            if debug:
-                                print("c_idx: " + str(c_idx))
-                                print("r_idx: " + str(r_idx))
-                                print("i: " + str(i))
-                                print("j: " + str(j))
-                            total += data[r_idx+i][c_idx+j] * self.kernels[k][i][j].weights[self.output_dimension[1]*i+j]
-                    c_out.append(total)
-                r_out.append(c_out)
-                if debug: print()
-            k_out.append(r_out)
-    
-        #print(k_out)
-        return k_out
+                            total += deriv[k][i][j] * self.data[i][j]
+                    weight_deltas.append(total)
+            kernel_weight_deltas.append(weight_deltas)
+
+        # update weights
+        for k in range(self.num_kernels):
+            weights = self.kernels[k][0][0].weights
+            for i in len(weights):
+                weights[i] -= self.eta * kernel_weight_deltas
+
+        return kernel_weight_deltas
 
 class FlattenLayer:
     def __init__(self, input_size):
         self.input_size = input_size
 
     def calculate(self, data):
-        #print(data)
-        return numpy.asarray(data).flatten().tolist()
+        self.data = numpy.asarray(data).flatten().tolist()
+        return self.data
+
+    def train(self, deriv):
+        return numpy.reshape(deriv, self.input_size)
+
+    def print(self):
+        print(self.data)
 
 class MaxPoolingLayer:
     def __init__(self, kernel_size, input_dimension):
@@ -266,8 +320,9 @@ class NeuralNetwork:
         for i in range(len(prediction)):
             derivs.append(get_deriv(self.loss)(prediction[i],target[i]))
 
-        for i in range(self.num_layers-1,-1,-1):
+        for i in range(len(self.layers)-1,-1,-1):
             derivs = self.layers[i].train(derivs)
+            self.layers[i].print()
 
     def print(self):
         for i in range(self.num_layers):
@@ -293,6 +348,7 @@ def main():
                                 kernel_size=3,
                                 strides=1,
                                 padding='valid',
+                                activation='sigmoid',
                                 input_shape=(5,5,1)))
 
         weight = [numpy.asarray([[[[1]],[[0]],[[1]]],
@@ -345,10 +401,10 @@ def main():
         print('Keras Model Output')
         print(model.predict(image), end='\n\n')
 
-        print('Keras Model Evaluation')
-        model.evaluate(image,numpy.asarray([[1]]))
-        print()
-
+#        print('Keras Model Evaluation')
+#        model.evaluate(image,numpy.asarray([[1]]))
+#        print()
+#
 #        model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
 #
 #        print('Keras Updated Kernel Weights:')
@@ -359,14 +415,13 @@ def main():
 #
 #        print('Keras Updated Model Evaluation')
 #        model.evaluate(image,numpy.asarray([[1]]))
-
         
         print("My cnn")
         cnn = NeuralNetwork(input_size = 5,
                             loss = square_error,
                             eta = .1)
 
-        weights = [[1,0,1,0,1,0,1,0,1]]
+        weights = [[1,0,1,0,1,0,1,0,1,0]]
 
         # add convolutional layer
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
@@ -394,9 +449,15 @@ def main():
 
         print("My Model Output")
         print(cnn.calculate(image))
+        exit()
 
         print("My Model Evaluation")
         print(cnn.calculate_loss(image,[1]))
+
+        cnn.train(image,[1])
+
+        print('Keras Updated Fully Connected Weights:')
+        print(model.layers[2].get_weights(), end='\n\n')
 
         #result = cnn.layers[1].calculate(result)
         #print(result)
