@@ -474,6 +474,9 @@ def main():
 
         model.layers[0].set_weights(weight) 
 
+        print('Keras 1st Layer Kernel Weights:')
+        print(model.layers[0].get_weights(), end='\n\n')
+
         # add 2nd convolutional layer
         model.add(layers.Conv2D(filters=1,
                                 kernel_size=3,
@@ -489,6 +492,9 @@ def main():
 
         model.layers[1].set_weights(weight) 
 
+        print('Keras 2nd Layer Kernel Weights:')
+        print(model.layers[1].get_weights(), end='\n\n')
+
         # add a flatten layer
         model.add(layers.Flatten())
 
@@ -499,11 +505,17 @@ def main():
 
         model.layers[3].set_weights(weight)
 
+        print('Keras Fully Connected Weights:')
+        print(model.layers[3].get_weights(), end='\n\n')
+
         image = numpy.asarray([[[[1],[1],[1],[0],[0]],
                                 [[0],[1],[1],[1],[0]],
                                 [[0],[0],[1],[1],[1]],
                                 [[0],[0],[1],[1],[0]],
                                 [[0],[1],[1],[0],[0]]]])
+
+        print('Input Image:')
+        print(image, end='\n\n')
 
         # prepare model for training
         sgd = keras.optimizers.SGD(learning_rate=0.1,
@@ -541,8 +553,8 @@ def main():
 
         weights = [[1,0,1,0,1,0,1,0,1,0]]
 
-        #print("My Kernel Weights")
-        #print(weights, end='\n\n')
+        print("My 1st Layer Kernel Weights")
+        print(weights, end='\n\n')
 
         # add 1st convolutional layer
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
@@ -551,6 +563,9 @@ def main():
 
         # add 2nd convolutional layer
         weights = [[0,1,0,0,1,0,0,1,0,0]]
+
+        print("My 2nd Layer Kernel Weights")
+        print(weights, end='\n\n')
 
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
                      activation=logistic, input_dimension=(3,3), eta=.1,
@@ -561,6 +576,9 @@ def main():
 
         # add fully connected layer
         weights = [[0.5,0.0]]
+
+        print("My Fully Connected Weights")
+        print(weights, end='\n\n')
         
         cnn.addLayer(FullyConnectedLayer, 
                      num_neurons = 1,
@@ -575,7 +593,6 @@ def main():
                  [0,0,1,1,0],
                  [0,1,1,0,0]]
 
-        """
         print("Input Image")
         print(image, end='\n\n')
 
@@ -584,7 +601,6 @@ def main():
 
         print("My Model Loss - MSE")
         print(cnn.calculate_loss(image,[1]), end='\n\n')
-        """
 
         print("Training...")
         cnn.train(image,[1])
@@ -599,6 +615,9 @@ def main():
 
         print("My Updated Fully Connected Weights")
         cnn.layers[3].print()
+
+        print("My Updated Model Loss - MSE")
+        print(cnn.calculate_loss(image,[1]), end='\n\n')
 
     else:
         print("Running example3.")
