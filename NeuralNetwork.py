@@ -145,7 +145,6 @@ class ConvolutionalLayer:
         self.weights = weights
         self.output_dimension = [input_dimension[0] - kernel_size + 1,
                                  input_dimension[1] - kernel_size + 1]
-        print("size of output: " + str(self.output_dimension))
         self.kernels = []
         for k in range(num_kernels):
             rows = []
@@ -204,9 +203,7 @@ class ConvolutionalLayer:
                 
     def print(self):
         for k in range(self.num_kernels):
-            for i in range(self.kernel_size):
-                for j in range(self.kernel_size):
-                    self.kernels[k][i][j].print()
+            self.kernels[k][0][0].print()
 
 class FlattenLayer:
     def __init__(self, input_size):
@@ -272,10 +269,10 @@ class NeuralNetwork:
     def calculate(self, data):
         output = data
         for layer in self.layers:
-            print("calculating output for layer: ", end='')
-            print(layer)
+            #print("calculating output for layer: ", end='')
+            #print(layer)
             output = layer.calculate(output)
-            print("output: " + str(output), end='\n\n')
+            #print("output: " + str(output), end='\n\n')
         return output
 
     def calculate_loss(self, sample, target):
@@ -290,7 +287,7 @@ class NeuralNetwork:
 
         for i in range(len(self.layers)-1,-1,-1):
             derivs = self.layers[i].train(derivs)
-            self.layers[i].print()
+            #self.layers[i].print()
 
     def print(self):
         for i in range(self.num_layers):
@@ -309,6 +306,8 @@ def main():
     if sys.argv[1] == 'example1':
         print("Running example1.")
 
+        print("Keras Convolutional Neural Network")
+        print("==================================")
         model=Sequential()
 
         # add convolutional layer
@@ -345,12 +344,11 @@ def main():
 
         model.layers[2].set_weights(weight)
 
-        old_conv_weights = model.layers[0].get_weights()
         print('Keras Kernel Weights:')
         print(model.layers[0].get_weights(), end='\n\n')
 
-        #print('Keras Fully Connected Weights:')
-        #print(model.layers[2].get_weights(), end='\n\n')
+        print('Keras Fully Connected Weights:')
+        print(model.layers[2].get_weights(), end='\n\n')
 
         # prepare model for training
         sgd = keras.optimizers.SGD(learning_rate=0.1,
@@ -364,52 +362,52 @@ def main():
                                 [[0],[0],[1],[1],[0]],
                                 [[0],[1],[1],[0],[0]]]])
 
-        """print('Input Image:')
+        print('Input Image:')
         print(image, end='\n\n')
 
         print('Keras Model Output')
         print(model.predict(image), end='\n\n')
 
-        print('Keras Model Evaluation')
+        print('Keras Model Loss - MSE')
         model.evaluate(image,numpy.asarray([[1]]))
         print()
-        """
 
         model.fit(image, numpy.asarray([[1]]), epochs=1, verbose=0)
 
         print('Keras Updated Kernel Weights:')
         print(model.layers[0].get_weights(), end='\n\n')
 
-        old_conv_weights = model.layers[0].get_weights()
-
-        print("Keras difference in weights")
-        print(numpy.subtract(old_conv_weights,model.layers[0].get_weights()))
-
-        """
         print('Keras Updated Fully Connected Weights:')
         print(model.layers[2].get_weights(), end='\n\n')
 
-        print('Keras Updated Model Evaluation')
+        print('Keras Updated Loss - MSE')
         model.evaluate(image,numpy.asarray([[1]]))
-       """ 
-        print("My cnn")
+        print()
+
+        print("My Convolutional Neural Network")
+        print("===============================")
         cnn = NeuralNetwork(input_size = 5,
                             loss = square_error,
                             eta = .1)
 
         weights = [[1,0,1,0,1,0,1,0,1,0]]
 
+        print("My Kernel Weights")
+        print(weights, end='\n\n')
+
         # add convolutional layer
         cnn.addLayer(ConvolutionalLayer, num_kernels=1, kernel_size=3,
                      activation=logistic, input_dimension=(5,5), eta=.1,
                      weights=weights)
-
 
         # add flatten layer
         cnn.addLayer(FlattenLayer, input_size=[1,3,3])
 
         # add fully connected layer
         weights = [[-0.1,0.2,-0.3,0.4,-0.5,0.6,-0.7,0.8,-0.9,0.0]]
+
+        print("My Fully Connected Weights")
+        print(weights, end='\n\n')
 
         cnn.addLayer(FullyConnectedLayer, 
                      num_neurons = 1,
@@ -424,43 +422,24 @@ def main():
                  [0,0,1,1,0],
                  [0,1,1,0,0]]
 
-        """print("My Model Output")
-        print(cnn.calculate(image))
+        print("Input Image")
+        print(image, end='\n\n')
 
-        print("My Model Evaluation")
-        print(cnn.calculate_loss(image,[1]))
-"""
-        print("My old conv weights")
-        print(cnn.layers[0].print())
+        print("My Model Output")
+        print(cnn.calculate(image), end='\n\n')
 
+        print("My Model Loss - MSE")
+        print(cnn.calculate_loss(image,[1]), end='\n\n')
+
+        print("Training...")
         cnn.train(image,[1])
 
-        exit()
+        print("My Updated Kernel Weights")
+        cnn.layers[0].print()
+        print()
 
-        #result = cnn.layers[1].calculate(result)
-        #print(result)
-        #cnn.addLayer(MaxPoolingLayer, kernel_size=2,input_dimension=[1,4,4])
-        #result = [[[12,20,30,0],[8,12,2,0],[34,70,37,4],[112,100,25,12]]]
-        #cnn.layers[1].calculate(result)
-
-        exit()
-
-        num_inputs = 2
-        num_layers = 2
-        num_neurons = [2,2]
-        weights = [[[.15,.20,.35],[.25,.30,.35]],
-                   [[.40,.45,.60],[.50,.55,.60]]]
-
-        nn = NeuralNetwork(num_layers, num_neurons, logistic, 
-                           num_inputs, square_error, .5, weights)
-
-        print("Loss before training example: ", end = '')
-        print(nn.calculate_loss([.05,.10],[.01,.99]))
-
-        nn.train([.05,.10],[.01,.99])
-
-        print("Loss after training example: ", end = '')
-        print(nn.calculate_loss(nn.calculate([.05,.10]),[.01,.99]))
+        print("My Updated Fully Connected Weights")
+        cnn.layers[2].print()
 
     elif sys.argv[1] == 'and':
         print("Running 'and' example.")
