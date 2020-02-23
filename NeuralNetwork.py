@@ -187,8 +187,10 @@ class ConvolutionalLayer:
         return k_out
 
     def train(self, deriv):
-        print("deriv")
-        print(deriv)
+        deriv = numpy.reshape(numpy.asarray(deriv),
+                              (self.num_kernels,
+                               self.output_dimension[0],
+                               self.output_dimension[1],))
         total = 0
         kernel_weight_deltas = []
         for k in range(self.num_kernels):
@@ -289,11 +291,11 @@ class NeuralNetwork:
             derivs.append(get_deriv(self.loss)(prediction[i],target[i]))
 
         for i in range(len(self.layers)-1,-1,-1):
-            print("training layer " + str(i))
-            print(self.layers[i])
+            #print("training layer " + str(i))
+            #print(self.layers[i])
             derivs = self.layers[i].train(derivs)
-            self.layers[i].print()
-            print()
+            #self.layers[i].print()
+            #print()
 
     def print(self):
         for i in range(self.num_layers):
@@ -586,8 +588,6 @@ def main():
 
         print("Training...")
         cnn.train(image,[1])
-
-        print("hello")
 
         print('My Updated 1st Layer Kernel Weights:')
         cnn.layers[0].print()
