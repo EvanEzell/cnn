@@ -441,75 +441,11 @@ def main():
         print("My Updated Fully Connected Weights")
         cnn.layers[2].print()
 
-    elif sys.argv[1] == 'and':
-        print("Running 'and' example.")
-        num_inputs = 2
-        num_layers = 2
-        num_neurons = [1,1]
-        weights = "random"
-
-        nn = NeuralNetwork(num_layers, num_neurons, logistic, 
-                           num_inputs, square_error, .1, weights)
-
-        inputs = [([0,0],[0]), ([0,1],[0]), 
-                  ([1,0],[0]), ([1,1],[1])]
-
-        for i in range(8000):
-            for sample, target in inputs:
-                nn.train(sample, target)
-
-        print("Outputs for all 4 inputs after training.")
-        print("0 and 0 -> " + str(nn.calculate([0,0])))
-        print("1 and 0 -> " + str(nn.calculate([1,0])))
-        print("0 and 1 -> " + str(nn.calculate([0,1])))
-        print("1 and 1 -> " + str(nn.calculate([1,1])))
+    elif sys.argv[1] == 'example2':
+        print("Running example2.")
         
     else:
-        print("Running 'xor' example.")
-        num_inputs = 2
-        num_layers = 2
-        num_neurons = [1,1]
-        weights = "random"
-
-        print("Training with one perceptron.")
-        inputs = [([0,0],[0]), ([0,1],[1]),
-                  ([1,0],[1]), ([1,1],[0])]
-
-        nn = NeuralNetwork(num_layers, num_neurons, logistic, 
-                           num_inputs, square_error, .2, weights)
-
-        for i in range(8000):
-            for sample, target in inputs:
-                nn.train(sample, target)
-
-        print("Outputs for all 4 inputs after training.")
-        print("0 and 0 -> " + str(nn.calculate([0,0])))
-        print("1 and 0 -> " + str(nn.calculate([1,0])))
-        print("0 and 1 -> " + str(nn.calculate([0,1])))
-        print("1 and 1 -> " + str(nn.calculate([1,1])))
-        print()
-
-        num_inputs = 2
-        num_layers = 2
-        num_neurons = [2,1]
-        weights = "random"
-
-        print("Training with multiple perceptrons.")
-        inputs = [([0,0],[0]), ([0,1],[1]),
-                  ([1,0],[1]), ([1,1],[0])]
-
-        nn = NeuralNetwork(num_layers, num_neurons, logistic, 
-                           num_inputs, square_error, .2, weights)
-
-        for i in range(8000):
-            for sample, target in inputs:
-                nn.train(sample, target)
-
-        print("Outputs for all 4 inputs after training.")
-        print("0 and 0 -> " + str(nn.calculate([0,0])))
-        print("1 and 0 -> " + str(nn.calculate([1,0])))
-        print("0 and 1 -> " + str(nn.calculate([0,1])))
-        print("1 and 1 -> " + str(nn.calculate([1,1])))
+        print("Running example3.")
 
 if __name__ == '__main__':
     main()
